@@ -5,7 +5,7 @@ metadata:
   name: mysql
   namespace: sai
 spec:
-  serviceName: "mysql"
+  serviceName: "appservice"
   replicas: 1
   selector:
     matchLabels:       
