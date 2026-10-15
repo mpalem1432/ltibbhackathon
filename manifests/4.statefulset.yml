@@ -1,30 +1,36 @@
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mysql
-  namespace: sai
 spec:
   serviceName: "mysql"
   replicas: 1
   selector:
-    matchLabels:       
+    matchLabels:
       app: dbapp
-  template:            
+  template:
     metadata:
       labels:
         app: dbapp
     spec:
       imagePullSecrets:
         - name: mysecret
+      # Added a security context block to give the MySQL user access to the storage volume
+      securityContext:
+        fsGroup: 999
       containers:
-        - name: mycont                   
+        - name: mysql-db
           image: saikumar894/clientapp:dbimage
-          ports:                          
+          ports:
             - containerPort: 3306
+          env:                                # 👈 ADD THIS INITIALIZATION BLOCK
+            - name: MYSQL_ROOT_PASSWORD
+              value: "12345"
+            - name: MYSQL_DATABASE
+              value: "customers"              # Matches your repo script database name
           volumeMounts:
             - name: www
-              mountPath: /usr/share/nginx/html/     # Fixed mountPath spelling (and updated target path logically for MySQL)
+              mountPath: /var/lib/mysql
           resources:
             requests:
               cpu: "100m"
@@ -32,11 +38,12 @@ spec:
             limits:
               cpu: "200m"
               memory: "100Mi"
-  volumeClaimTemplates:                     
+  volumeClaimTemplates:
     - metadata:
         name: www
       spec:
-        accessModes: ["ReadWriteOnce"]      # Fixed capitalization and indentation
+        accessModes: ["ReadWriteOnce"]
         resources:
           requests:
             storage: 1Gi
+
